@@ -49,3 +49,4 @@ app.*.map.json
 
 pubspec.lock
 flutter_plan.md
+docs/
