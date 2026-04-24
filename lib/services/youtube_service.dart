@@ -227,6 +227,29 @@ class YoutubeService {
     return '${url.substring(0, 80)}...${url.substring(url.length - 25)}';
   }
 
+  bool isPlaylistUrl(String url) {
+    try {
+      return Uri.parse(url).queryParameters.containsKey('list');
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Stream<(String, String, String)> getPlaylistTracks(String url) async* {
+    final listId = Uri.parse(url).queryParameters['list'];
+    if (listId == null) throw Exception('No playlist ID in URL');
+    _log('getPlaylistTracks: listId=$listId');
+    final playlistId = PlaylistId(listId);
+    await for (final video in _yt.playlists.getVideos(playlistId)) {
+      _log('playlist track: ${video.id.value} "${video.title}"');
+      yield (
+        'https://www.youtube.com/watch?v=${video.id.value}',
+        video.title,
+        'https://img.youtube.com/vi/${video.id.value}/mqdefault.jpg',
+      );
+    }
+  }
+
   void dispose() {
     _log('dispose');
     _yt.close();

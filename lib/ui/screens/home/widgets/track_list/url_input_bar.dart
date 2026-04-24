@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -64,10 +66,15 @@ class _UrlInputBarState extends State<UrlInputBar> {
 
   void _addTrack() {
     final url = _controller.text.trim();
-    if (url.isNotEmpty) {
-      context.read<PlaylistProvider>().addTrack(url);
-      _controller.clear();
+    if (url.isEmpty) return;
+    final provider = context.read<PlaylistProvider>();
+    final listId = Uri.tryParse(url)?.queryParameters['list'];
+    if (listId != null) {
+      unawaited(provider.addPlaylistTracks(url));
+    } else {
+      provider.addTrack(url);
     }
+    _controller.clear();
   }
 
   void _clear() {

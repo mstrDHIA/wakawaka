@@ -40,6 +40,25 @@ class PlaylistProvider extends ChangeNotifier {
   bool get hasPrev => _currentIndex > 0;
   int get trackCount => tracks.length;
 
+  Future<void> addPlaylistTracks(String url) async {
+    try {
+      var added = 0;
+      await for (final (videoUrl, title, thumbnailUrl)
+          in _youtube.getPlaylistTracks(url)) {
+        final track = Track(url: videoUrl, title: title, thumbnailUrl: thumbnailUrl);
+        final updatedTracks = List<Track>.from(_playlist.tracks)..add(track);
+        _playlist = _playlist.copyWith(tracks: updatedTracks);
+        _updateManager();
+        notifyListeners();
+        added++;
+      }
+      // Empty result (e.g. Mix/Radio playlists) — fall back to single track.
+      if (added == 0) await addTrack(url);
+    } catch (_) {
+      await addTrack(url);
+    }
+  }
+
   Future<void> addTrack(String url) async {
     if (url.trim().isEmpty) return;
 
